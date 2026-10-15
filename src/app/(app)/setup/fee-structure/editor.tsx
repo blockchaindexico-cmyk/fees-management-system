@@ -99,7 +99,7 @@ export function FeeStructureEditor({
                   </th>
                   {installments.map((i) => (
                     <th key={i.id} scope="col" className="px-2 py-2 text-right font-medium" title={i.name}>
-                      <span className="block uppercase tracking-wide">Inst {i.number}</span>
+                      <span className="block uppercase tracking-wide">{i.name}</span>
                       <span className="block font-normal">due {fmtDateShort(i.due_date)}</span>
                     </th>
                   ))}
@@ -126,7 +126,7 @@ export function FeeStructureEditor({
                             onChange={(e) => setValues((v) => ({ ...v, [k]: e.target.value }))}
                             inputMode="decimal"
                             placeholder="0"
-                            aria-label={`${h.name}, installment ${i.number} (rupees)`}
+                            aria-label={`${h.name}, ${i.name} (rupees)`}
                             aria-invalid={bad || undefined}
                             className={cn(
                               "h-8 w-full min-w-[84px] rounded-md border bg-surface px-2 text-right text-subhead tabular text-ink placeholder:text-muted focus:border-accent focus:outline-none focus:ring-2 focus:ring-accent/25",

@@ -135,7 +135,7 @@ export default async function ClassPage({ params, searchParams }: PageProps<"/cl
                     <span className="text-caption font-semibold tabular">{Math.round(i.collection_pct ?? 0)}%</span>
                   </Ring>
                   <span className="min-w-0 flex-1">
-                    <span className="block text-subhead font-semibold text-ink group-hover:text-accent">Installment {i.number}</span>
+                    <span className="block text-subhead font-semibold text-ink group-hover:text-accent">{i.name}</span>
                     <span className="block text-caption text-muted">Due {fmtDate(i.due_date)}</span>
                   </span>
                   <span className="text-right">

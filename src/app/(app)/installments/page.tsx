@@ -77,7 +77,7 @@ export default async function InstallmentsPage() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-headline font-semibold text-ink">Installment {r.number}</p>
+                    <p className="text-headline font-semibold text-ink">{r.name}</p>
                     <p className="text-footnote text-ink-2">Due {fmtDate(r.due_date)}</p>
                   </div>
                   <Badge tone={STATUS[r.status].tone}>{STATUS[r.status].label}</Badge>

@@ -213,7 +213,7 @@ export function CollectForm({
                     </button>
                     <span className={cn("size-2 rounded-full", dot)} aria-hidden />
                     <span className="text-subhead font-semibold text-ink">
-                      {g.session} · Installment {g.instNo}
+                      {g.session} · {g.inst}
                     </span>
                     {kind === "arrears" && <Badge tone="serious">Old dues</Badge>}
                     {g.overdue ? <Badge tone="critical">Overdue</Badge> : <Badge>Due {fmtDate(g.due)}</Badge>}

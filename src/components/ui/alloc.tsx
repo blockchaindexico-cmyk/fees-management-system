@@ -10,7 +10,9 @@ const KIND: Record<AllocationLine["kind"], { label: string; dot: string; chip: s
 
 export function allocText(a: AllocationLine): string {
   if (!a.installment) return `Advance ${rupees(a.amount)}`;
-  return `${a.session} · Inst ${a.installment_no} · ${a.fee_head} ${rupees(a.amount)}`;
+  // one-off items (e.g. "Admission Fee") carry a fee head of the same name; say it once
+  const head = a.fee_head && a.fee_head !== a.installment ? ` · ${a.fee_head}` : "";
+  return `${a.session} · ${a.installment}${head} ${rupees(a.amount)}`;
 }
 
 /** "What it paid for": one compact chip per session + installment, coloured by kind. */
@@ -19,7 +21,7 @@ export function AllocLines({ lines, compact = false }: { lines: AllocationLine[]
   const groups = new Map<string, { kind: AllocationLine["kind"]; title: string; amount: number; heads: string[]; inferred: boolean }>();
   for (const a of lines) {
     const key = `${a.kind}|${a.session}|${a.installment_no}`;
-    const title = a.installment ? `${a.session} · Inst ${a.installment_no}` : "Advance";
+    const title = a.installment ? `${a.session} · ${a.installment}` : "Advance";
     const g = groups.get(key) ?? { kind: a.kind, title, amount: 0, heads: [], inferred: false };
     g.amount += a.amount;
     if (a.fee_head && !g.heads.includes(a.fee_head)) g.heads.push(a.fee_head);

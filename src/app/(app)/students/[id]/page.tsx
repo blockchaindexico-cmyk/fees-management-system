@@ -184,7 +184,7 @@ export default async function Student360Page({ params, searchParams }: PageProps
                     return (
                       <li key={i.installment_id} className="rounded-2xl bg-fill-2 p-4">
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-subhead font-semibold text-ink">Inst {i.number}</span>
+                          <span className="text-subhead font-semibold text-ink">{i.name}</span>
                           <Badge tone={s.tone}>{s.label}</Badge>
                         </div>
                         <div className="mt-4 flex items-center gap-4">

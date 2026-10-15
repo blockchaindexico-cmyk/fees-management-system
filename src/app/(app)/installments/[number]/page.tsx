@@ -42,7 +42,7 @@ export default async function InstallmentPage({ params, searchParams }: PageProp
   const supabase = await createClient();
   const { data: inst } = await supabase.from("installments").select("id, number, name").eq("session_id", session.id).eq("number", Number(number)).maybeSingle();
   if (!inst) notFound();
-  const { data: siblings } = await supabase.from("installments").select("number").eq("session_id", session.id).order("number");
+  const { data: siblings } = await supabase.from("installments").select("number, name").eq("session_id", session.id).order("number");
 
   const { data, error } = await supabase.rpc("installment_detail", { p_installment: inst.id });
   if (error || !data) throw new Error(error?.message ?? "Could not load installment");
@@ -57,21 +57,21 @@ export default async function InstallmentPage({ params, searchParams }: PageProp
   return (
     <div className="space-y-5">
       <PageHeader
-        title={`Installment ${d.installment.number}`}
+        title={d.installment.name}
         description={`${session.name} · due ${fmtDate(d.installment.due_date)}${d.installment.next_due ? ` · next due ${fmtDate(d.installment.next_due)}` : ""}`}
         crumbs={[{ label: "Installments", href: "/installments" }]}
         actions={
-          <div className="inline-flex rounded-[10px] bg-fill p-[2px]">
+          <div className="inline-flex max-w-full overflow-x-auto rounded-[10px] bg-fill p-[2px]">
             {(siblings ?? []).map((x) => (
               <Link
                 key={x.number}
                 href={`/installments/${x.number}`}
                 className={cn(
-                  "rounded-[8px] px-3 py-[5px] text-footnote font-medium",
+                  "shrink-0 whitespace-nowrap rounded-[8px] px-3 py-[5px] text-footnote font-medium",
                   x.number === d.installment.number ? "bg-surface text-ink shadow-[0_1px_3px_rgba(0,0,0,0.12)] dark:bg-surface-3" : "text-ink-2 hover:text-ink",
                 )}
               >
-                {x.number}
+                {x.name}
               </Link>
             ))}
           </div>
@@ -202,7 +202,7 @@ export default async function InstallmentPage({ params, searchParams }: PageProp
             totals
             pageSize={15}
             exportName={`inst-${d.installment.number}-${list === "all" ? "gaps" : "call-list"}`}
-            exportMeta={[`Installment ${d.installment.number} · ${session.name}`, list === "all" ? "Students with a gap" : "Smallest set of students holding 50% of the gap"]}
+            exportMeta={[`${d.installment.name} · ${session.name}`, list === "all" ? "Students with a gap" : "Smallest set of students holding 50% of the gap"]}
             columns={[
               { key: "full_name", label: "Student", type: "person", href: "/students/{student_id}", sub: "who" },
               { key: "phone", label: "Phone", hideOnMobile: true },

@@ -44,7 +44,7 @@ export async function saveStructure(_prev: ActionState, fd: FormData): Promise<A
     if (!i || !h) return { error: "The page is out of date. Reload it and try again." };
     const raw = String(c.amount ?? "").trim();
     const paise = raw === "" ? 0 : parseRupees(raw);
-    if (paise === null || paise < 0) return { error: `Check the amount for ${h.name}, installment ${i.number}: “${raw}” is not a valid rupee amount.` };
+    if (paise === null || paise < 0) return { error: `Check the amount for ${h.name}, ${i.name}: “${raw}” is not a valid rupee amount.` };
     if (paise > 0) upserts.push({ class_id: classId, installment_id: i.id, fee_head_id: h.id, amount: paise });
     else zeroByHead.set(h.id, [...(zeroByHead.get(h.id) ?? []), i.id]);
   }
