@@ -24,8 +24,13 @@ modelled.
 | | **Payments & receipts** | Register by date range with split current / previous dues / advance, mode totals, search by receipt or cheque/UTR, CSV export. |
 | | **Pending fees** | Everyone who owes money; overdue-only, previous-dues and left-students views; filter by class, section, status; CSV and print. |
 | | **Owner summary** | One page: KPIs, this month, class-wise pending, top 10 defaulters, month-by-month. Print / save as PDF, share on WhatsApp or email. |
+| Recovery | **Parents** (`/parents`) | Every family as one parent profile (found by phone number, so brothers and sisters share it) with the children's fees added up: pending, overdue, old dues carried, days without payment, family fee status, last call and open promise. Overdue grouped by payment habit and by economic condition. |
+| | **Parent 360** (`/parents/<id>`) | The family in one place: what they should pay, have paid and still owe; each child; every receipt; the call history with how each promise turned out; how reliably they keep promises (before the date, on it, within grace, in part, broken); payment habit as recorded by staff next to what the records show; economic condition, concerns about the child, what matters to them, how they behave, best time to call. Log a call from here. |
+| | **Recovery dashboard** (`/recovery`) | For today, yesterday, 7 or 30 days, the school year or any dates: the money received and what brought it in (a call, an activity, or the family on its own), compared with the period before, with the results written out in plain sentences; money per day by source; calls per day, picked-up rate, promises and how they turned out; who called the most and what came in after their calls; **does calling make a difference** (share of families we spoke to who paid against the other families with dues); which activity brought the most; the money by payment habit. |
+| | **Calls** (`/calls`) | The daily call list, made fresh every day and ordered by priority, each family with its main reason (broke a promise, asked to call today, high dues, never paid, no payment for 2 months, old dues…). Each caller takes a batch (*Give me 10 families*) or picks families, and sees **my list** (to call / done), **everyone to call** (with who took whom) and **called today** (every call, about anything). My calls today / yesterday / 7 / 30 days: calls, picked up, not reached, promises, money that came in after them. Also promises falling due, who is off the list and why, and what each caller did today. **Call screen** (`/calls/<parent>`): one-tap dial, why the family is on the list, dues per child, concerns, earlier calls and the call form with *Save & next family*. |
+| | **Activities** (`/activities`) | Every student activity (extra English practice, a club, a trip for students whose fees are paid…) with a verdict (working well / some effect / not working), the money it brought in, students who owe won over, responses; also by class and by student. **Activity** (`/activities/<id>`): add a class or students, record each family's response and count receipts for it. On a student's profile, **Recovery activities** starts an activity for that student alone or adds them to a running one. |
 | Setup | Sessions & installments, classes & fee heads, fee structure grid, promote students to the next session, CSV imports (students, opening dues, historical payments). |
-| Admin | School settings and allocation rule, staff & roles, reconciliation checks, re-run allocation, close/reopen months, audit log. |
+| Admin | School settings, allocation rule and promise grace days, staff & roles, reconciliation checks, re-run allocation, close/reopen months, audit log. |
 
 Every table can be sorted, searched and exported to CSV (Excel) with the filters written into the file.
 
@@ -62,6 +67,41 @@ Applied to each payment in date order, and re-run automatically whenever charges
 Payments are append-only. Cancelling a receipt adds a reversing entry dated today, so a closed month never
 changes; the correction shows in the month it was made. Imported receipts without hints are marked
 *inferred* so you know the split came from the rule rather than the receipt.
+
+### Fee recovery
+
+* **Families.** A parent profile is keyed by a unique phone number (digits only; `+91` and a leading 0 are
+  ignored). A student is linked to the profile of their phone number when they are added, imported or their number
+  changes; a new number creates a profile named after the father (or mother). Two profiles of one family can be
+  merged (the other number becomes the alternate phone, so later admissions with it join too), and a student
+  admitted under another number can be moved into the family by hand. Family amounts are the children's
+  `student_balances` added up, including old dues.
+* **Promises.** A call (or a student note) can carry a date and an amount the family promised to pay by. It is
+  **kept** when the family (any child) pays the amount (or anything, when no amount was given) between the call and
+  the date plus the *grace days* in Settings (default 1: promised for the 18th, paid on the 19th is kept),
+  **partly kept** when less arrived, **broken** when nothing did, and **waiting** until then.
+* **Calls.** Every call says what it was about: fees, the student's studies or report, a parent-teacher meeting,
+  a parent's question, or something else. What the family said about fees and a promise are recorded on fee calls.
+* **Daily call list.** Worked out afresh every day from the rules in Settings: every family owing at least the
+  minimum overdue (default ₹500, incl. old dues), except families who paid in the last *N* days (default 30: a
+  family that paid ₹15,000 two weeks ago is not called even if it still owes ₹35,000), families waiting for a promise
+  (until the promised date plus the grace days) and families called recently (after a fee call that got through,
+  *days between calls*, default 7; after one that did not, the next day; or the date they asked to be called on).
+  A broken promise puts the family back the day after its deadline, whatever it paid before. Priority: broken
+  promises and call-backs first, then the bigger dues, the longer silence and old dues; families who can pay
+  (economic condition, payment habit) move up and families that cannot be reached move down. Callers take families
+  from it (a fee call made today also puts the family on the caller's list); untaken families stay for anyone.
+* **What brought a payment in.** At the fee counter the accountant ticks the call (to the family, in the last 30
+  days) or the activity (of the student) that brought the payment in; a fee call that got through in the last week,
+  or whose promise is still running, is ticked by default. It can be changed on the receipt. Each receipt counts
+  for one thing. These ticks split the money on the dashboard into *after a call*, *from an activity* and *paid on
+  their own*, and give each caller and each activity the money it brought in.
+* **Does calling make a difference.** Of the families we spoke to about fees in the period, the share that paid on
+  or after the call; of the other families with dues (owing the minimum now, or who paid overdue fees in the
+  period), the share that paid overdue fees.
+* **Activities.** An activity is *working well* when half or more of its students who owe (paid since it started,
+  or owe now) paid because of it (a receipt counted for it) or its target is reached; *some effect* from a quarter;
+  *not working* below that; *too early* in its first week while nothing is counted.
 
 ### Consistency checks
 
@@ -101,9 +141,10 @@ Browser (React screens)  ──fetch JSON──▶  REST API  src/app/api/**/rou
 | Sign in | `POST /api/auth/login`, `POST /api/auth/logout`, `GET /api/auth/me`, `GET /api/bootstrap` (viewer, sessions, classes, settings) |
 | Analytics | `GET /api/analytics/dashboard`, `defaulters`, `balances`, `classes`, `classes/[id]`, `months/[month]` (+ `/payments`, `/non-payers`, `/classes/[classId]`), `installments`, `installments/[number]`, `reconciliation` |
 | Students | `GET/POST /api/students`, `GET /api/students/search`, `GET/PUT/DELETE /api/students/[id]`, `…/360`, `…/dues`, `…/fees`, `…/withdraw`, `…/reactivate`, `…/notes`, `…/charges`, `…/charges/generate`, `…/concessions`, `…/opening-dues` |
-| Money | `GET/POST /api/payments`, `GET /api/payments/[id]`, `POST /api/payments/[id]/cancel`, `GET/POST /api/targets`, `GET/DELETE /api/targets/[id]` |
+| Money | `GET/POST /api/payments` (a payment can be counted for a call or an activity), `GET /api/payments/[id]`, `POST /api/payments/[id]/cancel`, `PUT /api/payments/[id]/source`, `GET/POST /api/targets`, `GET/DELETE /api/targets/[id]` |
+| Recovery | `GET /api/recovery?from&to` (dashboard), `GET /api/calls` (today's list), `POST /api/calls/take`, `POST /api/calls/release`, `GET/POST /api/parents`, `POST /api/parents/link`, `GET/PUT/DELETE /api/parents/[id]` (+ `/children`, `/merge`, `/calls`, `/calls/[callId]`), `GET/POST /api/activities`, `GET/PUT/DELETE /api/activities/[id]` (+ `/participants`, `/participants/[participantId]`), `GET /api/students/[id]/recovery`, `PUT /api/settings/call-rules` |
 | Setup | `/api/sessions` (+ `/[id]`, `/current`, `/installments`), `/api/installments/[id]`, `/api/classes`, `/api/fee-heads`, `/api/fee-structure` (+ `/copy`, `/apply`), `/api/promote`, `POST /api/imports/[kind]`, `GET /api/setup/checklist`, `GET /api/setup/classes` |
-| Admin | `/api/settings` (+ `/allocation-rule`), `/api/staff` (+ `/[id]`, `/[id]/password`), `POST /api/admin/reallocate`, `POST /api/months/[month]/close` and `/reopen`, `GET /api/admin/snapshots`, `GET /api/admin/audit` |
+| Admin | `/api/settings` (+ `/allocation-rule`, `/promise-grace`), `/api/staff` (+ `/[id]`, `/[id]/password`), `POST /api/admin/reallocate`, `POST /api/months/[month]/close` and `/reopen`, `GET /api/admin/snapshots`, `GET /api/admin/audit` |
 
 Money is integer paise in every request and response; dates are `YYYY-MM-DD`. Errors come back as
 `{ "error": "…" }` with a status code (400 invalid, 401 not signed in, 403 role, 404, 409 conflict).
@@ -121,7 +162,7 @@ docker run -d --name fees-db -p 5432:5432 \
 ```bash
 npm install
 cp .env.example .env.local    # set DATABASE_URL
-npm run db:reset              # creates the schema + loads demo data (2 sessions, ~340 students)
+npm run db:reset              # creates the schema + loads demo data (2 sessions, ~340 students, calls and activities)
 npm run dev                   # http://localhost:3000
 ```
 
@@ -178,8 +219,8 @@ select public.grant_app_access('fees_app');   -- as the schema owner; repeat aft
 | Role | Access |
 | --- | --- |
 | Admin (owner / director) | Everything, including settings, staff, closing months and re-running allocation. |
-| Accountant | Collect fees, cancel receipts, edit students and fee data, imports, reconciliation. |
-| Principal | Read-only analytics, class and student views. |
+| Accountant | Collect fees, cancel receipts, edit students and fee data, imports, reconciliation, parent profiles, student activities, what brought a payment in. Calls parents. |
+| Principal | Read-only analytics, class, student and parent views. Calls parents (takes families from the daily list and logs calls). |
 | Class teacher | Reserved for a later release (own class only); currently no data access. |
 
 Access is checked by the API on every request and again inside every SQL function (and by row-level security
@@ -192,14 +233,15 @@ after 7 days without use (30 days at most), and signing out ends the session on 
 
 ```
 db/
-  migrations/   schema + RLS, allocation engine, operations, analytics, app access
+  migrations/   schema + RLS, allocation engine, operations, analytics, app access, fee recovery
   seed.sql      deterministic demo data (local only)
   tests/        pgTAP tests (npm run db:test)
 scripts/db.mjs  migrate / seed / reset / test / create-user / set-password
 src/
   app/api/      the REST API (route handlers)
   app/(app)/    signed-in screens (dashboard, monthly, installments, classes, students,
-                collect, payments, pending, reports, setup, settings, admin); each page renders a
+                collect, payments, pending, reports, parents, recovery, calls, activities, setup, settings, admin);
+                each page renders a
                 client view that loads its data from the API
   app/login     sign in
   server/       backend only: database pool, auth, cache, validation, services

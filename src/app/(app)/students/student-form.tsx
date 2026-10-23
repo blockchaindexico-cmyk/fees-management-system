@@ -72,7 +72,7 @@ export function StudentForm({
           <Field label="Email" htmlFor="email">
             <Input id="email" name="email" type="email" defaultValue={student?.email ?? ""} />
           </Field>
-          <Field label="Phone" htmlFor="phone" hint="Used for fee reminders">
+          <Field label="Phone" htmlFor="phone" hint="Used for fee reminders. Brothers and sisters with the same number share one parent profile.">
             <Input id="phone" name="phone" type="tel" inputMode="tel" defaultValue={student?.phone ?? ""} />
           </Field>
           <Field label="Alternate phone" htmlFor="alt_phone">

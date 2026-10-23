@@ -26,6 +26,15 @@ export const NAV: NavGroup[] = [
     ],
   },
   {
+    label: "Recovery",
+    items: [
+      { href: "/recovery", label: "Recovery dashboard", icon: "TrendingUp", color: "green" },
+      { href: "/calls", label: "Calls", icon: "PhoneCall", color: "blue" },
+      { href: "/activities", label: "Activities", icon: "Sparkles", color: "teal" },
+      { href: "/parents", label: "Parents", icon: "UsersRound", color: "indigo" },
+    ],
+  },
+  {
     label: "Manage",
     items: [
       { href: "/setup", label: "Setup", icon: "SlidersHorizontal", color: "gray", roles: WRITERS, match: ["/setup"] },

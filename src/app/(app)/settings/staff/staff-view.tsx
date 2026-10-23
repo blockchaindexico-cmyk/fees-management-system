@@ -15,8 +15,8 @@ import { AddStaffForm, PasswordForm, RoleForm } from "./staff-forms";
 
 const ROLE_HELP: { role: string; title: string; text: string; icon: LucideIcon; color: TileColor }[] = [
   { role: "admin", title: "Owner / Director", text: "Everything, including settings and staff.", icon: Crown, color: "indigo" },
-  { role: "accountant", title: "Accountant", text: "Collects fees, edits students and fees.", icon: Calculator, color: "green" },
-  { role: "principal", title: "Principal", text: "View only: dashboards and reports.", icon: Eye, color: "blue" },
+  { role: "accountant", title: "Accountant", text: "Collects fees, edits students and fees, calls parents.", icon: Calculator, color: "green" },
+  { role: "principal", title: "Principal / caller", text: "Sees dashboards and reports; calls parents from the daily list. Cannot change fees.", icon: Eye, color: "blue" },
   { role: "teacher", title: "Teacher", text: "Coming later · no access yet.", icon: GraduationCap, color: "orange" },
   { role: "none", title: "No access", text: "Can sign in but sees nothing.", icon: Ban, color: "gray" },
 ];

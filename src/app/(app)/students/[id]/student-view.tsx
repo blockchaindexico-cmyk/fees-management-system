@@ -22,6 +22,8 @@ import { IconTile } from "@/components/ui/kpi";
 import { Ring } from "@/components/ui/ring";
 import { cn } from "@/lib/cn";
 import { NoteForm, DeleteNoteButton } from "./note-form";
+import { FamilyCard } from "./family-card";
+import { ActivitiesCard } from "./activities-card";
 
 const INST_STATUS = {
   paid: { label: "Paid", tone: "good", color: "var(--good)" },
@@ -214,6 +216,8 @@ export function StudentView({ id, sp }: { id: string; sp: SearchParams }) {
             )}
           </Card>
 
+          <ActivitiesCard studentId={id} studentName={st.full_name} overdue={b?.total_overdue ?? 0} />
+
           <Card title="Payments" description="Every receipt and exactly what it paid for. % = share of the outstanding balance that the payment cleared.">
             {d.payments.length === 0 ? (
               <Empty title="No payments yet" />
@@ -276,6 +280,8 @@ export function StudentView({ id, sp }: { id: string; sp: SearchParams }) {
               <span className="font-semibold tabular">{rupees(totalOutstanding)}</span>
             </div>
           </Card>
+
+          <FamilyCard studentId={id} />
 
           <Card title="Payment habit" description="Based on when money reached each installment compared with its due date.">
             <p className={cn("text-title2 font-semibold", PROFILE[d.behaviour.profile].tone)}>{PROFILE[d.behaviour.profile].label}</p>

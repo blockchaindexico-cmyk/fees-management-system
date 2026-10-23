@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useActionState, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Banknote, Building2, Check, CreditCard, FileCheck2, MoreHorizontal, Smartphone } from "lucide-react";
+import { Banknote, Building2, Check, CreditCard, FileCheck2, MoreHorizontal, PhoneCall, Smartphone, Sparkles } from "lucide-react";
 import { collectPayment } from "./actions";
 import type { ActionState } from "@/lib/action-state";
 import type { DueLine, PaymentMode } from "@/lib/types";
@@ -16,6 +16,17 @@ import { KIND_LEGEND } from "@/components/ui/alloc";
 import { cn } from "@/lib/cn";
 
 type SessionLite = { id: string; start: string; end: string; name: string };
+
+/** A recent call to the family or an activity of the student that may have brought the payment in. */
+export type PaymentSourceOption = {
+  /** "call:<id>" or "activity:<participant id>" */
+  value: string;
+  kind: "call" | "activity";
+  title: string;
+  detail: string;
+  /** calls: the call date; activities: the start date (receipts before it cannot be counted) */
+  since: string;
+};
 
 /** Default allocation rule, mirroring the database engine (used for the preview; the DB stores what you confirm). */
 function autoAllocate(amount: number, dues: DueLine[], order: "oldest_first" | "current_first", paySessionId: string | null) {
@@ -53,6 +64,8 @@ export function CollectForm({
   order,
   sessions,
   recent,
+  sources = [],
+  suggested = "",
 }: {
   studentId: string;
   dues: DueLine[];
@@ -61,6 +74,10 @@ export function CollectForm({
   order: "oldest_first" | "current_first";
   sessions: SessionLite[];
   recent: { id: string; receipt_no: string; paid_on: string; amount: number; cancelled: boolean }[];
+  /** recent calls and the student's activities: the cashier ticks the one that brought the payment in */
+  sources?: PaymentSourceOption[];
+  /** the option to tick by default (a recent fee call or a running promise), or "" */
+  suggested?: string;
 }) {
   const [state, action, pending] = useActionState<ActionState, FormData>(collectPayment, {});
   const router = useRouter();
@@ -75,6 +92,8 @@ export function CollectForm({
   const [manual, setManual] = useState(false);
   const [lines, setLines] = useState<Record<string, string>>({});
   const [showNote, setShowNote] = useState(false);
+  // null: the suggestion (it may arrive after the form is shown)
+  const [picked, setPicked] = useState<string | null>(null);
 
   const paySession = sessions.find((s) => paidOn >= s.start && paidOn <= s.end) ?? null;
   const paySessionStart = paySession?.start ?? "";
@@ -83,6 +102,8 @@ export function CollectForm({
   const overdueLines = dues.filter((d) => d.is_overdue);
   const totalOverdue = overdueLines.reduce((a, d) => a + d.remaining, 0);
   const modeInfo = MODES.find((m) => m.value === mode)!;
+  const sourceOptions = sources.filter((o) => o.since <= paidOn);
+  const source = picked ?? (sourceOptions.some((o) => o.value === suggested) ? suggested : "");
 
   const allocation = useMemo(() => {
     if (!manual) return autoAllocate(amount, dues, order, paySession?.id ?? null);
@@ -318,6 +339,48 @@ export function CollectForm({
             <Field label="Date" htmlFor="paid_on">
               <Input id="paid_on" name="paid_on" type="date" max={today} value={paidOn} onChange={(e) => setPaidOn(e.target.value)} required />
             </Field>
+            {sourceOptions.length > 0 && (
+              <fieldset>
+                <legend className="mb-1.5 text-footnote font-medium text-ink-2">What brought this payment in?</legend>
+                <input type="hidden" name="source" value={source} />
+                <div className="space-y-1.5" role="radiogroup" aria-label="What brought this payment in">
+                  {[...sourceOptions, { value: "", kind: null, title: "Nothing in particular", detail: "The family came on its own", since: "" }].map((o) => {
+                    const active = o.value === source;
+                    const Icon = o.kind === "call" ? PhoneCall : o.kind === "activity" ? Sparkles : Check;
+                    return (
+                      <button
+                        key={o.value || "none"}
+                        type="button"
+                        role="radio"
+                        aria-checked={active}
+                        onClick={() => setPicked(o.value)}
+                        className={cn(
+                          "flex w-full items-start gap-2.5 rounded-xl px-3 py-2 text-left transition-colors",
+                          active ? "bg-accent-soft ring-1 ring-accent" : "bg-fill-2 hover:bg-fill",
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "mt-0.5 inline-flex size-5 shrink-0 items-center justify-center rounded-full",
+                            active ? "bg-accent text-accent-ink" : "bg-surface text-muted",
+                          )}
+                          aria-hidden
+                        >
+                          <Icon className="size-3" strokeWidth={2.5} />
+                        </span>
+                        <span className="min-w-0">
+                          <span className={cn("block text-subhead font-medium", active ? "text-accent" : "text-ink")}>{o.title}</span>
+                          <span className="block text-caption text-muted">{o.detail}</span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+                {suggested && picked === null && source === suggested && (
+                  <p className="mt-1.5 text-caption text-muted">Ticked because of the recent call. Change it if the family came for another reason.</p>
+                )}
+              </fieldset>
+            )}
             {showNote ? (
               <Field label="Remarks" htmlFor="remarks">
                 <Textarea id="remarks" name="remarks" rows={2} autoFocus />

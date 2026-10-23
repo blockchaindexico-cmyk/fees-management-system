@@ -4,8 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
-  CalendarDays, FileText, Hourglass, IndianRupee, Layers, LayoutGrid, Menu, Receipt, School, Settings,
-  SlidersHorizontal, Users, X,
+  CalendarDays, FileText, Hourglass, IndianRupee, Layers, LayoutGrid, Menu, PhoneCall, Receipt, School, Settings,
+  SlidersHorizontal, Sparkles, TrendingUp, Users, UsersRound, X,
 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import type { AppRole } from "@/lib/types";
@@ -13,7 +13,8 @@ import { IconTile } from "@/components/ui/kpi";
 import { NAV } from "./nav";
 
 const ICONS: Record<string, React.ElementType> = {
-  CalendarDays, FileText, Hourglass, Layers, LayoutGrid, Receipt, School, Settings, SlidersHorizontal, Users,
+  CalendarDays, FileText, Hourglass, Layers, LayoutGrid, PhoneCall, Receipt, School, Settings, SlidersHorizontal, Sparkles, TrendingUp, Users,
+  UsersRound,
 };
 
 function isActive(pathname: string, href: string, match?: string[]) {

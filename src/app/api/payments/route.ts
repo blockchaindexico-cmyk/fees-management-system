@@ -21,11 +21,18 @@ const Body = z
     reference_no: optionalText(100),
     remarks: optionalText(500),
     targets: z.array(z.object({ charge_id: id("Invalid allocation lines."), amount: paise().positive() })).max(500).default([]),
+    credit_call_id: id("Unknown call.")
+      .nullish()
+      .transform((v) => v ?? null),
+    credit_participant_id: id("Unknown activity.")
+      .nullish()
+      .transform((v) => v ?? null),
   })
+  .refine((b) => b.credit_call_id === null || b.credit_participant_id === null, "Choose a call or an activity, not both.")
   .refine((b) => !["cheque", "upi", "bank_transfer"].includes(b.mode) || b.reference_no, {
     error: (iss) => ((iss.input as { mode?: string }).mode === "cheque" ? "Enter the cheque number." : "Enter the transaction / UTR reference."),
   })
   .refine((b) => b.targets.reduce((a, t) => a + t.amount, 0) <= b.amount, "The amounts allocated to dues add up to more than the amount received.");
 
-/** Collect a fee payment. Returns the new receipt's id and number. */
+/** Collect a fee payment (optionally counted for the call or the activity that brought it in). Returns the receipt's id and number. */
 export const POST = api("writer", async ({ req, viewer }) => collect(viewer, await readBody(req, Body)));

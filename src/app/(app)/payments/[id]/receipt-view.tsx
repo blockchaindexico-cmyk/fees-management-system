@@ -10,7 +10,7 @@ import { useApp } from "@/components/layout/app-shell";
 import { NotFoundCard, Pending } from "@/components/ui/page-state";
 import { LinkButton } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CancelReceipt } from "./receipt-actions";
+import { CancelReceipt, ReceiptSource } from "./receipt-actions";
 import { PrintButton } from "@/components/ui/print-button";
 import { cn } from "@/lib/cn";
 
@@ -222,9 +222,10 @@ export function ReceiptView({ id, sp }: { id: string; sp: SearchParams }) {
         ))}
       </div>
 
-      {writer && !p.cancelled && !p.is_reversal && (
-        <div className="no-print mx-auto mt-4 flex max-w-[760px] justify-end">
-          <CancelReceipt paymentId={id} receiptNo={p.receipt_no} />
+      {!p.cancelled && !p.is_reversal && (
+        <div className="no-print mx-auto mt-4 flex max-w-[760px] flex-wrap items-center justify-between gap-3">
+          <ReceiptSource paymentId={id} studentId={pay.student_id} paidOn={p.paid_on} source={res.data.source} writer={writer} />
+          {writer && <CancelReceipt paymentId={id} receiptNo={p.receipt_no} />}
         </div>
       )}
     </>

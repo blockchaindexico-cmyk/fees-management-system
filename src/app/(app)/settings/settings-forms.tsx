@@ -6,7 +6,8 @@ import type { SchoolSettings } from "@/lib/types";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Field, FormError, FormSuccess, Input, Select, Textarea } from "@/components/ui/form";
-import { updateAllocationRule, updateSchoolProfile } from "./actions";
+import { updateAllocationRule, updateCallRules, updateSchoolProfile } from "./actions";
+import { toRupeeInput } from "../students/helpers";
 import { useFormAction } from "./use-form-action";
 
 const MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -122,6 +123,50 @@ export function AllocationRuleForm({ current }: { current: SchoolSettings["alloc
         <FormSuccess message={state.message} />
         <Button type="submit" variant={changed ? "primary" : "secondary"} disabled={pending || !changed}>
           {pending ? "Re-matching all payments…" : changed ? "Change rule and re-run allocation" : "No change"}
+        </Button>
+      </form>
+    </Card>
+  );
+}
+
+/** The rules that build the daily call list (Calls page), and the grace days of a payment promise. */
+export function CallRulesForm({ settings }: { settings: SchoolSettings }) {
+  const [state, onSubmit, pending] = useFormAction(updateCallRules);
+  return (
+    <Card
+      id="call-rules"
+      title="Daily call list"
+      description="Every day the system lists the families to call, best first. These rules decide who is on the list and when a family comes back to it."
+    >
+      <form onSubmit={onSubmit} className="space-y-4">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Call families owing at least (₹ overdue)" htmlFor="min_overdue">
+            <Input id="min_overdue" name="min_overdue" inputMode="decimal" required defaultValue={toRupeeInput(settings.call_min_overdue)} />
+          </Field>
+          <Field label="High dues from (₹)" htmlFor="high_due" hint="Families owing this much are called first.">
+            <Input id="high_due" name="high_due" inputMode="decimal" required defaultValue={toRupeeInput(settings.call_high_due)} />
+          </Field>
+          <Field label="Skip families who paid in the last (days)" htmlFor="skip_paid_days" hint="A family that paid recently is not called.">
+            <Input id="skip_paid_days" name="skip_paid_days" type="number" min={0} max={180} required defaultValue={settings.call_skip_paid_days} />
+          </Field>
+          <Field label="After a call that got through, wait (days)" htmlFor="gap_days" hint="If nobody picks up, the family is tried again the next day.">
+            <Input id="gap_days" name="gap_days" type="number" min={1} max={60} required defaultValue={settings.call_gap_days} />
+          </Field>
+          <Field
+            label="Grace days after a promised date"
+            htmlFor="grace_days"
+            hint="With 1: promised for the 18th, paid on the 19th = kept; not paid by the 19th = back on the list on the 20th."
+          >
+            <Input id="grace_days" name="grace_days" type="number" min={0} max={30} required defaultValue={settings.promise_grace_days} />
+          </Field>
+          <Field label="Families a caller gets at a time" htmlFor="batch">
+            <Input id="batch" name="batch" type="number" min={1} max={100} required defaultValue={settings.call_batch} />
+          </Field>
+        </div>
+        <FormError message={state.error} />
+        <FormSuccess message={state.message} />
+        <Button type="submit" disabled={pending}>
+          {pending ? "Saving…" : "Save"}
         </Button>
       </form>
     </Card>

@@ -28,7 +28,12 @@ function ChartTooltip({
   label,
   series,
   footer,
-}: Partial<TooltipContentProps<number, string>> & { series: SeriesKey[]; footer?: (row: Record<string, unknown>) => string | null }) {
+  format = rupees,
+}: Partial<TooltipContentProps<number, string>> & {
+  series: SeriesKey[];
+  footer?: (row: Record<string, unknown>) => string | null;
+  format?: (v: number) => string;
+}) {
   if (!active || !payload?.length) return null;
   const row = payload[0]?.payload as Record<string, unknown>;
   return (
@@ -41,7 +46,7 @@ function ChartTooltip({
               <span className={s.shape === "line" ? "h-[3px] w-3 rounded-full" : "size-2 rounded-full"} style={{ background: s.color }} aria-hidden />
               {s.label}
             </span>
-            <span className="font-semibold tabular text-ink">{rupees(Number(row?.[s.key] ?? 0))}</span>
+            <span className="font-semibold tabular text-ink">{format(Number(row?.[s.key] ?? 0))}</span>
           </li>
         ))}
       </ul>
@@ -275,4 +280,95 @@ export function CumulativeChart({
   height?: number;
 }) {
   return <DailyCollectionChart data={data.map((d) => ({ ...d, amount: 0, count: 0 }))} target={target} height={height} />;
+}
+
+/**
+ * Money received per day (week, month), stacked by what brought it in: a call, an activity, or the family paid on
+ * its own (neutral). Blue / teal / track from the validated palette; orange stays reserved for old dues.
+ */
+export function RecoverySourceChart({
+  data,
+  height = 240,
+}: {
+  data: { label: string; tooltipLabel: string; calls: number; activities: number; direct: number }[];
+  height?: number;
+}) {
+  const series: SeriesKey[] = [
+    { key: "calls", label: "After a call", color: "var(--series-1)", shape: "rect" },
+    { key: "activities", label: "From an activity", color: "var(--series-3)", shape: "rect" },
+    { key: "direct", label: "Paid on their own", color: "var(--series-track)", shape: "rect" },
+  ];
+  return (
+    <div>
+      <div className="mb-4">
+        <ChartLegend items={series} />
+      </div>
+      <div style={{ height }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -6 }} barCategoryGap="22%">
+            <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
+            <XAxis dataKey="label" {...X_AXIS} interval="preserveStartEnd" minTickGap={12} />
+            <YAxis {...Y_AXIS} tickFormatter={(v) => compactAxis(Number(v))} />
+            <Tooltip
+              cursor={{ fill: "var(--fill-2)", radius: 6 }}
+              content={(p) => (
+                <ChartTooltip
+                  {...(p as TooltipContentProps<number, string>)}
+                  series={series}
+                  footer={(r) => `Total ${rupees(Number(r.calls ?? 0) + Number(r.activities ?? 0) + Number(r.direct ?? 0))}`}
+                />
+              )}
+            />
+            <Bar dataKey="calls" stackId="m" fill="var(--series-1)" maxBarSize={22} isAnimationActive={false} />
+            <Bar dataKey="activities" stackId="m" fill="var(--series-3)" maxBarSize={22} isAnimationActive={false} />
+            <Bar dataKey="direct" stackId="m" fill="var(--series-track)" maxBarSize={22} radius={[5, 5, 0, 0]} isAnimationActive={false} />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+}
+
+/** Calls per day (week, month): picked up (blue) on top of the ones that did not get through (neutral). */
+export function CallsTrendChart({
+  data,
+  height = 200,
+}: {
+  data: { label: string; tooltipLabel: string; connected: number; not_reached: number }[];
+  height?: number;
+}) {
+  const series: SeriesKey[] = [
+    { key: "connected", label: "Picked up", color: "var(--series-1)", shape: "rect" },
+    { key: "not_reached", label: "Not reached", color: "var(--series-track)", shape: "rect" },
+  ];
+  const count = (v: number) => `${v} ${v === 1 ? "call" : "calls"}`;
+  return (
+    <div>
+      <div className="mb-4">
+        <ChartLegend items={series} />
+      </div>
+      <div style={{ height }}>
+        <ResponsiveContainer width="100%" height="100%">
+          <ComposedChart data={data} margin={{ top: 4, right: 4, bottom: 0, left: -18 }} barCategoryGap="22%">
+            <CartesianGrid vertical={false} stroke="var(--chart-grid)" />
+            <XAxis dataKey="label" {...X_AXIS} interval="preserveStartEnd" minTickGap={12} />
+            <YAxis {...Y_AXIS} allowDecimals={false} />
+            <Tooltip
+              cursor={{ fill: "var(--fill-2)", radius: 6 }}
+              content={(p) => (
+                <ChartTooltip
+                  {...(p as TooltipContentProps<number, string>)}
+                  series={series}
+                  format={count}
+                  footer={(r) => count(Number(r.connected ?? 0) + Number(r.not_reached ?? 0))}
+                />
+              )}
+            />
+            <Bar dataKey="connected" stackId="c" fill="var(--series-1)" maxBarSize={22} isAnimationActive={false} />
+            <Bar dataKey="not_reached" stackId="c" fill="var(--series-track)" maxBarSize={22} radius={[5, 5, 0, 0]} isAnimationActive={false} />
+          </ComposedChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
 }

@@ -20,6 +20,7 @@ export function friendlyError(error: { message?: string; code?: string; details?
     if (msg.includes("classes_name")) return "A class with this name already exists.";
     if (msg.includes("fee_heads_name")) return "A fee head with this name already exists.";
     if (msg.includes("installments_session_id_number")) return "That installment number already exists in this session.";
+    if (msg.includes("parents_phone_key")) return "Another parent profile already has this phone number.";
     return "This record already exists.";
   }
   if (error.code === "23P01" || msg.includes("academic_sessions_no_overlap")) return "Session dates overlap with another session.";

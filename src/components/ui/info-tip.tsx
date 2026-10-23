@@ -19,7 +19,8 @@ export function InfoTip({ children, className, align = "center" }: { children: R
       <span
         role="tooltip"
         className={cn(
-          "pointer-events-none invisible absolute top-full z-50 mt-2 w-max max-w-[280px] rounded-xl bg-surface px-3 py-2 text-left text-footnote font-normal normal-case tracking-normal text-ink-2 opacity-0 shadow-pop transition-all duration-150 group-hover/tip:visible group-hover/tip:opacity-100 group-focus-within/tip:visible group-focus-within/tip:opacity-100",
+          // display:none until shown, so a tip near the right edge never widens the page
+          "pointer-events-none absolute top-full z-50 mt-2 hidden w-max max-w-[280px] rounded-xl bg-surface px-3 py-2 text-left text-footnote font-normal normal-case tracking-normal text-ink-2 shadow-pop transition-opacity duration-150 starting:opacity-0 group-hover/tip:block group-focus-within/tip:block",
           align === "center" && "left-1/2 -translate-x-1/2",
           align === "start" && "left-0",
           align === "end" && "right-0",

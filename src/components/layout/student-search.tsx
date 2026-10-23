@@ -11,7 +11,8 @@ import type { SearchResult } from "@/lib/types";
 
 /**
  * Fast student lookup by name, admission no, father's name or phone.
- * Ctrl/⌘+K focuses it from anywhere. Enter opens the highlighted student.
+ * Ctrl/⌘+K focuses it from anywhere. Enter opens the highlighted student; in "pick" mode it hands the student
+ * to `onPick` instead (adding a child to a family, a student to an activity).
  */
 export function StudentSearch({
   mode = "profile",
@@ -20,13 +21,15 @@ export function StudentSearch({
   className,
   large = false,
   canCollect = true,
+  onPick,
 }: {
-  mode?: "profile" | "collect";
+  mode?: "profile" | "collect" | "pick";
   autoFocus?: boolean;
   placeholder?: string;
   className?: string;
   large?: boolean;
   canCollect?: boolean;
+  onPick?: (student: SearchResult) => void;
 }) {
   const router = useRouter();
   const [q, setQ] = useState("");
@@ -81,7 +84,8 @@ export function StudentSearch({
   function go(r: SearchResult) {
     setOpen(false);
     setQ("");
-    router.push(target(r));
+    if (mode === "pick") onPick?.(r);
+    else router.push(target(r));
   }
 
   return (
@@ -139,7 +143,15 @@ export function StudentSearch({
             <li key={r.id} role="option" aria-selected={i === hi}>
               <div className={cn("flex items-center gap-3 rounded-xl px-2.5 py-2", i === hi && "bg-fill")} onMouseEnter={() => setHi(i)}>
                 <Avatar name={r.full_name} size="md" />
-                <Link href={target(r)} onMouseDown={(e) => e.preventDefault()} onClick={() => go(r)} className="min-w-0 flex-1">
+                <Link
+                  href={target(r)}
+                  onMouseDown={(e) => e.preventDefault()}
+                  onClick={(e) => {
+                    if (mode === "pick") e.preventDefault();
+                    go(r);
+                  }}
+                  className="min-w-0 flex-1"
+                >
                   <span className="block truncate text-subhead font-semibold text-ink">
                     {r.full_name} <span className="font-normal text-muted">· {r.admission_no}</span>
                     {r.status !== "active" && <span className="ml-1 text-caption font-normal text-muted">({r.status.replace("_", " ")})</span>}
